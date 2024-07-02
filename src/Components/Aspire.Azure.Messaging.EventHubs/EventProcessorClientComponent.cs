@@ -41,19 +41,35 @@ internal sealed class EventProcessorClientComponent()
             {
                 EnsureConnectionStringOrNamespaceProvided(settings, connectionName, configurationSectionName);
 
-                options.Identifier ??= GenerateClientIdentifier(settings);
+                options.Identifier ??= GenerateClientIdentifier(settings.EventHubName, settings.ConsumerGroup);
 
                 var containerClient = GetBlobContainerClient(settings, provider, configurationSectionName);
 
-                var processor = !string.IsNullOrEmpty(settings.ConnectionString)
-                    ? new EventProcessorClient(containerClient,
-                        settings.ConsumerGroup ?? EventHubConsumerClient.DefaultConsumerGroupName,
-                        settings.ConnectionString)
-                    : new EventProcessorClient(containerClient,
-                        settings.ConsumerGroup ?? EventHubConsumerClient.DefaultConsumerGroupName, settings.Namespace,
-                        settings.EventHubName, cred, options);
+                var consumerGroup = settings.ConsumerGroup ?? EventHubConsumerClient.DefaultConsumerGroupName;
 
-                return processor;
+                if (!string.IsNullOrEmpty(settings.ConnectionString))
+                {
+                    if (!string.IsNullOrEmpty(settings.EventHubName))
+                    {
+                        return new EventProcessorClient(containerClient,
+                                                consumerGroup,
+                                                settings.ConnectionString,
+                                                settings.EventHubName);
+                    }
+                    else
+                    {
+                        return new EventProcessorClient(containerClient,
+                                                consumerGroup,
+                                                settings.ConnectionString);
+                    }
+                }
+                else
+                {
+                    return new EventProcessorClient(containerClient,
+                        consumerGroup,
+                        settings.FullyQualifiedNamespace,
+                        settings.EventHubName, cred, options);
+                }
             });
     }
 

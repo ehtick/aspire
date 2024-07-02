@@ -14,6 +14,26 @@ namespace Aspire.Hosting.Tests.Postgres;
 public class AddPostgresTests
 {
     [Fact]
+    public void AddPostgresAddsGeneratedPasswordParameterWithUserSecretsParameterDefaultInRunMode()
+    {
+        using var appBuilder = TestDistributedApplicationBuilder.Create();
+
+        var pg = appBuilder.AddPostgres("pg");
+
+        Assert.IsType<UserSecretsParameterDefault>(pg.Resource.PasswordParameter.Default);
+    }
+
+    [Fact]
+    public void AddPostgresDoesNotAddGeneratedPasswordParameterWithUserSecretsParameterDefaultInPublishMode()
+    {
+        using var appBuilder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
+
+        var pg = appBuilder.AddPostgres("pg");
+
+        Assert.IsNotType<UserSecretsParameterDefault>(pg.Resource.PasswordParameter.Default);
+    }
+
+    [Fact]
     public async Task AddPostgresWithDefaultsAddsAnnotationMetadata()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
@@ -346,7 +366,7 @@ public class AddPostgresTests
     {
 
         using var builder = TestDistributedApplicationBuilder.Create();
-        builder.AddPostgres("mypostgres").WithPgAdmin(pga => pga.UseHostPort(8081));
+        builder.AddPostgres("mypostgres").WithPgAdmin(pga => pga.WithHostPort(8081));
 
         var container = builder.Resources.Single(r => r.Name == "mypostgres-pgadmin");
         var volume = container.Annotations.OfType<ContainerMountAnnotation>().Single();
@@ -371,8 +391,8 @@ public class AddPostgresTests
     public void WithPostgresTwiceEndsUpWithOneContainer()
     {
         using var builder = TestDistributedApplicationBuilder.Create();
-        builder.AddPostgres("mypostgres1").WithPgAdmin(pga => pga.UseHostPort(8081));
-        builder.AddPostgres("mypostgres2").WithPgAdmin(pga => pga.UseHostPort(8081));
+        builder.AddPostgres("mypostgres1").WithPgAdmin(pga => pga.WithHostPort(8081));
+        builder.AddPostgres("mypostgres2").WithPgAdmin(pga => pga.WithHostPort(8081));
 
         builder.Resources.Single(r => r.Name.EndsWith("-pgadmin"));
     }
@@ -383,8 +403,8 @@ public class AddPostgresTests
     public void WithPostgresProducesValidServersJsonFile(string containerHost)
     {
         var builder = DistributedApplication.CreateBuilder();
-        var pg1 = builder.AddPostgres("mypostgres1").WithPgAdmin(pga => pga.UseHostPort(8081));
-        var pg2 = builder.AddPostgres("mypostgres2").WithPgAdmin(pga => pga.UseHostPort(8081));
+        var pg1 = builder.AddPostgres("mypostgres1").WithPgAdmin(pga => pga.WithHostPort(8081));
+        var pg2 = builder.AddPostgres("mypostgres2").WithPgAdmin(pga => pga.WithHostPort(8081));
 
         // Add fake allocated endpoints.
         pg1.WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 5001, containerHost));
@@ -406,7 +426,7 @@ public class AddPostgresTests
 
         // Make sure the first server is correct.
         Assert.Equal(pg1.Resource.Name, servers.GetProperty("1").GetProperty("Name").GetString());
-        Assert.Equal("Aspire instances", servers.GetProperty("1").GetProperty("Group").GetString());
+        Assert.Equal("Servers", servers.GetProperty("1").GetProperty("Group").GetString());
         Assert.Equal(containerHost, servers.GetProperty("1").GetProperty("Host").GetString());
         Assert.Equal(5001, servers.GetProperty("1").GetProperty("Port").GetInt32());
         Assert.Equal("postgres", servers.GetProperty("1").GetProperty("Username").GetString());
@@ -416,7 +436,7 @@ public class AddPostgresTests
 
         // Make sure the second server is correct.
         Assert.Equal(pg2.Resource.Name, servers.GetProperty("2").GetProperty("Name").GetString());
-        Assert.Equal("Aspire instances", servers.GetProperty("2").GetProperty("Group").GetString());
+        Assert.Equal("Servers", servers.GetProperty("2").GetProperty("Group").GetString());
         Assert.Equal("host2", servers.GetProperty("2").GetProperty("Host").GetString());
         Assert.Equal(5002, servers.GetProperty("2").GetProperty("Port").GetInt32());
         Assert.Equal("postgres", servers.GetProperty("2").GetProperty("Username").GetString());

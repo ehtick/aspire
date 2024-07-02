@@ -1,18 +1,22 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
 var catalogDb = builder.AddPostgres("postgres")
+                       .WithDataVolume()
                        .WithPgAdmin()
                        .AddDatabase("catalogdb");
 
 var basketCache = builder.AddRedis("basketcache")
                          .WithDataVolume()
-                         .WithRedisCommander();
+                         .WithRedisCommander(c =>
+                         {
+                             c.WithHostPort(33801);
+                         });
 
 var catalogService = builder.AddProject<Projects.CatalogService>("catalogservice")
                             .WithReference(catalogDb)
                             .WithReplicas(2);
 
-var messaging = builder.AddRabbitMQ("messaging", password: builder.CreateStablePassword("rabbitmq-password", special: false))
+var messaging = builder.AddRabbitMQ("messaging")
                        .WithDataVolume()
                        .WithManagementPlugin()
                        .PublishAsContainer();

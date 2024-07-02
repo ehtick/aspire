@@ -33,7 +33,8 @@ Example JSON configuration file:
 ### Common configuration
 
 - `ASPNETCORE_URLS` specifies one or more HTTP endpoints through which the dashboard frontend is served. The frontend endpoint is used to view the dashboard in a browser. Defaults to http://localhost:18888.
-- `DOTNET_DASHBOARD_OTLP_ENDPOINT_URL` specifies the OTLP endpoint. OTLP endpoint hosts an OTLP service and receives telemetry. Defaults to http://localhost:18889.
+- `DOTNET_DASHBOARD_OTLP_ENDPOINT_URL` specifies the OTLP/gRPC endpoint. OTLP/gRPC endpoint hosts an OTLP service and receives telemetry using gRPC. Defaults to http://localhost:18889.
+- `DOTNET_DASHBOARD_OTLP_HTTP_ENDPOINT_URL` specifies the OTLP/HTTP endpoint. OTLP/HTTP endpoint hosts an OTLP service and receives telemetry using Protobuf over HTTP. Defaults to http://localhost:18890.
 - `DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS` specifies the dashboard doesn't use authentication and accepts anonymous access. This setting is a shortcut to configuring `Dashboard:Frontend:AuthMode` and `Dashboard:Otlp:AuthMode` to `Unsecured`.
 - `DOTNET_DASHBOARD_CONFIG_FILE_PATH` specifies the path for an optional JSON configuration file.
 
@@ -68,6 +69,8 @@ The OTLP endpoint can be secured with [client certificate](https://learn.microso
 
 It may also be run unsecured. Set `Dashboard:Otlp:AuthMode` to `Unsecured`. The OTLP endpoint will allow anonymous access. This setting is used during local development, but is not recommended if you attempt to host the dashboard in other settings.
 
+For more information, see the official .NET Aspire docs—[Dashboard configuration: OTLP authentication](https://learn.microsoft.com/dotnet/aspire/fundamentals/dashboard/configuration#otlp-authentication).
+
 #### OTLP client certification authentication
 
 For client certification authentication, set `Dashboard:Otlp:AuthMode` to `Certificate`.
@@ -78,6 +81,8 @@ For API key authentication, set `Dashboard:Otlp:AuthMode` to `ApiKey`, then add 
 
 - `Dashboard:Otlp:PrimaryApiKey` specifies the primary API key. (required, string)
 - `Dashboard:Otlp:SecondaryApiKey` specifies the secondary API key. (optional, string)
+
+For more information, see [Security considerations for running the .NET Aspire dashboard: Secure telemetry endpoint](https://learn.microsoft.com/dotnet/aspire/fundamentals/dashboard/security-considerations#secure-telemetry-endpoint).
 
 ### Resources
 
